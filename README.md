@@ -25,7 +25,7 @@
   * `suwayomi` (:4567)
   * `transmission` (:9091)
   * `vaultwarden` (:8443 via Caddy)
-  * `filebrowser` (:8080)
+  * `copyparty` (:8080)
   * `Shizuku` privileged API
 * 🧸 **Quick Actions Bar**: Single-tap stack restart (`~/restart-services.sh`), ADB TCP cycling, survival re-binding, and display sleep controls.
 * 🛡️ **Touch Shield (Touch Blocker)**: Transparent overlay lock with a quick-tap temporary pause for easy interactions without taking the phone out of dock mode.

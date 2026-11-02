@@ -301,7 +301,7 @@ class GuardService : Service() {
             _suwayomiStatus.value = feed["suwayomi"]
             _transmissionStatus.value = feed["transmission"]
             _vaultwardenStatus.value = feed["vaultwarden"]?.let { it && feed["caddy"] == true }
-            _filebrowserStatus.value = feed["filebrowser"]
+            _fileShareStatus.value = feed["copyparty"]
             return
         }
         _jellyfinStatus.value = isEndpointHealthy("http://127.0.0.1:8096/health", 2000) || isPortListening(8096, 1000)
@@ -309,7 +309,7 @@ class GuardService : Service() {
         _transmissionStatus.value = isPortListening(9091, 1000)
         // Vaultwarden itself (loopback only); Caddy terminates TLS for it on :8443
         _vaultwardenStatus.value = isEndpointHealthy("http://127.0.0.1:8088/alive", 2000) && isPortListening(8443, 1000)
-        _filebrowserStatus.value = isEndpointHealthy("http://127.0.0.1:8080/health", 2000)
+        _fileShareStatus.value = isEndpointHealthy("http://127.0.0.1:8080/", 2000)
     }
 
     private fun checkSurvivalLayer() {
@@ -710,8 +710,8 @@ class GuardService : Service() {
         private val _vaultwardenStatus = MutableStateFlow<Boolean?>(null)
         val vaultwardenStatus: StateFlow<Boolean?> = _vaultwardenStatus.asStateFlow()
 
-        private val _filebrowserStatus = MutableStateFlow<Boolean?>(null)
-        val filebrowserStatus: StateFlow<Boolean?> = _filebrowserStatus.asStateFlow()
+        private val _fileShareStatus = MutableStateFlow<Boolean?>(null)
+        val fileShareStatus: StateFlow<Boolean?> = _fileShareStatus.asStateFlow()
 
         private val _adbTcpStatus = MutableStateFlow<Boolean?>(null)
         val adbTcpStatus: StateFlow<Boolean?> = _adbTcpStatus.asStateFlow()

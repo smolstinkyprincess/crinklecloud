@@ -15,7 +15,7 @@ HTTP_CHECKS=(
     "jellyfin http://127.0.0.1:8096/health"
     "suwayomi http://127.0.0.1:4567/"
     "vaultwarden https://127.0.0.1:8443/alive"
-    "filebrowser http://127.0.0.1:8080/health"
+    "copyparty http://127.0.0.1:8080/"
 )
 
 # Tailscale recovery. Starts as a dry run: you get "Would: ..." alerts but nothing is

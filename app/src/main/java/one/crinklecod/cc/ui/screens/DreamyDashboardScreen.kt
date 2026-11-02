@@ -208,7 +208,7 @@ fun DreamyDashboardScreen(
         }
     }
     val vaultwardenStatus by GuardService.vaultwardenStatus.collectAsState()
-    val filebrowserStatus by GuardService.filebrowserStatus.collectAsState()
+    val fileShareStatus by GuardService.fileShareStatus.collectAsState()
 
     var isDimmed by remember { mutableStateOf(prefs.getBoolean(KEY_SCREEN_DIMMED, false)) }
     var isCalibrating by remember { mutableStateOf(prefs.getBoolean(KEY_CALIBRATING, false)) }
@@ -353,7 +353,7 @@ fun DreamyDashboardScreen(
             ServiceStatus("Suwayomi", "manga · :4567", suwayomiStatus),
             ServiceStatus("Transmission", "torrents · :9091", transmissionStatus),
             ServiceStatus("Vaultwarden", "passwords · :8443", vaultwardenStatus),
-            ServiceStatus("FileBrowser", "files · :8080", filebrowserStatus),
+            ServiceStatus("copyparty", "files · :8080", fileShareStatus),
         ),
         isCalibrating = isCalibrating,
         isShieldActive = isTouchActive,
