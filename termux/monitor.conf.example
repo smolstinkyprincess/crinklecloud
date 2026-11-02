@@ -3,7 +3,7 @@
 
 # ntfy: anyone who knows the topic name can read these alerts, so keep it private
 NTFY_SERVER="https://ntfy.sh"
-NTFY_TOPIC="razrguard6416842"
+NTFY_TOPIC=""   # pick something unguessable, e.g. razrguard-$(head -c 12 /dev/urandom | od -An -tx1 | tr -d ' \n')
 
 # healthchecks.io ping URL (Check > Details), e.g. https://hc-ping.com/xxxxxxxx-xxxx-...
 # Set the check's Period to 5 minutes and Grace Time to 10 minutes.
