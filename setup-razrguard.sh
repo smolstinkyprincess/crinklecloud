@@ -2,7 +2,7 @@
 
 set -e
 
-PKG="one.crinklecod.razrguard"
+PKG="one.crinklecod.cc"
 TARGET_PACKAGES=("$PKG" "com.termux" "com.termux.boot" "com.tailscale.ipn" "moe.shizuku.privileged.api")
 
 echo "============================================="
