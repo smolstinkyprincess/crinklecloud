@@ -54,4 +54,4 @@ Visit the live showcase site at: [https://smolstinkyprincess.github.io/crinklecl
 ---
 
 ## 💖 Credits & License
-Created with ♡ by **crinklecod**. Licensed under the [MIT License](LICENSE).
+Created with ♡ by **crinklecod**. Licensed under the [Apache License 2.0](LICENSE).
