@@ -51,6 +51,10 @@ put "$P/termux/.ssh-motd.sh"           "$HOME/.ssh-motd.sh"           700
 put "$P/proot/start-jellyfin.sh"       "$ROOTFS/usr/local/bin/start-jellyfin.sh" 755 jellyfin
 put "$P/proot/start-suwayomi.sh"       "$ROOTFS/usr/local/bin/start-suwayomi.sh" 755 suwayomi
 put "$P/proot/Caddyfile"               "$ROOTFS/etc/caddy/Caddyfile"  644 caddy
+# Static files; darkhttpd serves them as-is, no restart needed
+for f in index.html app.js style.css; do
+    put "$P/dashboard/$f" "$HOME/dashboard/$f" 644
+done
 
 echo "[*] RazrGuard services (termux/)"
 # The installer only rewrites files whose contents changed, so snapshot to diff afterwards
