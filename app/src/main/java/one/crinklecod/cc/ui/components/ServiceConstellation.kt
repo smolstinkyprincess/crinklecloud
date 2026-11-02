@@ -1,6 +1,9 @@
 package one.crinklecod.cc.ui.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.MarqueeSpacing
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,7 +25,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import one.crinklecod.cc.ui.animation.breathingGlow
@@ -123,17 +125,18 @@ private fun ServiceRow(service: ServiceStatus) {
         StatusGlyph(kind = service.glyph, online = service.online)
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
+            // Long names/details glide sideways instead of clipping (only animates on overflow)
             Text(
                 text = service.name,
                 style = MaterialTheme.typography.labelLarge,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                modifier = Modifier.dreamyMarquee()
             )
             Text(
                 text = service.detail,
                 style = MaterialTheme.typography.labelSmall,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                modifier = Modifier.dreamyMarquee()
             )
         }
         Text(
@@ -151,3 +154,13 @@ private fun ServiceRow(service: ServiceStatus) {
         )
     }
 }
+
+/** Slow, gentle marquee: waits a beat, drifts ~30 dp/s, pauses again between loops. */
+@OptIn(ExperimentalFoundationApi::class)
+private fun Modifier.dreamyMarquee(): Modifier = basicMarquee(
+    iterations = Int.MAX_VALUE,
+    initialDelayMillis = 2_000,
+    repeatDelayMillis = 2_500,
+    spacing = MarqueeSpacing(28.dp),
+    velocity = 30.dp,
+)

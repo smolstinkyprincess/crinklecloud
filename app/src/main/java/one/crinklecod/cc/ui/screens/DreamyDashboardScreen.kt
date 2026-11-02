@@ -1,5 +1,19 @@
 package one.crinklecod.cc.ui.screens
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.runtime.produceState
+import androidx.compose.ui.platform.LocalDensity
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlin.math.abs
+import one.crinklecod.cc.SystemLoad
+import one.crinklecod.cc.SystemStats
+import one.crinklecod.cc.ui.components.SystemLoadBars
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ClipData
@@ -119,6 +133,9 @@ import one.crinklecod.cc.ui.theme.SleepyRose
 private const val KEY_SCREEN_DIMMED = "screen_dimmed"
 private const val KEY_CALIBRATING = "dead_zone_calibration"
 private const val DIMMED_BRIGHTNESS = 0.02f
+private const val SYSTEM_LOAD_POLL_MS = 5_000L
+private const val CONSTELLATION_SCROLL_DP_PER_S = 12
+private const val CONSTELLATION_REST_MS = 3_500L
 
 @Immutable
 data class DashboardUiState(
@@ -132,6 +149,7 @@ data class DashboardUiState(
     val keepScreenOn: Boolean = false,
     val isScreenDimmed: Boolean = false,
     val favoriteApps: List<AppInfo> = emptyList(),
+    val systemLoad: SystemLoad? = null,
 )
 
 /** Every user intent the dashboard can raise; defaults are no-ops so previews stay terse. */
@@ -179,6 +197,18 @@ fun DreamyDashboardScreen(
     val jellyfinStatus by GuardService.jellyfinStatus.collectAsState()
     val suwayomiStatus by GuardService.suwayomiStatus.collectAsState()
     val transmissionStatus by GuardService.transmissionStatus.collectAsState()
+    // Polled only while the dashboard is on screen; cleared after a few misses so a dead
+    // stats feed shows "listening…" instead of frozen numbers
+    val systemLoad by produceState<SystemLoad?>(initialValue = null) {
+        var misses = 0
+        while (true) {
+            val fresh = withContext(Dispatchers.IO) { SystemStats.fetch() }
+            if (fresh != null) { value = fresh; misses = 0 } else if (++misses >= 3) value = null
+            delay(SYSTEM_LOAD_POLL_MS)
+        }
+    }
+    val vaultwardenStatus by GuardService.vaultwardenStatus.collectAsState()
+    val filebrowserStatus by GuardService.filebrowserStatus.collectAsState()
 
     var isDimmed by remember { mutableStateOf(prefs.getBoolean(KEY_SCREEN_DIMMED, false)) }
     var isCalibrating by remember { mutableStateOf(prefs.getBoolean(KEY_CALIBRATING, false)) }
@@ -322,6 +352,8 @@ fun DreamyDashboardScreen(
             ServiceStatus("Jellyfin", "media · :8096", jellyfinStatus),
             ServiceStatus("Suwayomi", "manga · :4567", suwayomiStatus),
             ServiceStatus("Transmission", "torrents · :9091", transmissionStatus),
+            ServiceStatus("Vaultwarden", "passwords · :8443", vaultwardenStatus),
+            ServiceStatus("FileBrowser", "files · :8080", filebrowserStatus),
         ),
         isCalibrating = isCalibrating,
         isShieldActive = isTouchActive,
@@ -329,6 +361,7 @@ fun DreamyDashboardScreen(
         keepScreenOn = keepScreenOn,
         isScreenDimmed = isDimmed,
         favoriteApps = favoriteApps,
+        systemLoad = systemLoad,
     )
 
     DreamyDashboardContent(state = state, actions = actions)
@@ -357,9 +390,21 @@ fun DreamyDashboardContent(state: DashboardUiState, actions: DashboardActions) {
             ) {
                 HaloPill(state = state, actions = actions)
                 Spacer(Modifier.height(10.dp))
-                Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    ConstellationColumn(state, Modifier.weight(1f).fillMaxHeight())
-                    SanctuaryColumn(state, actions, Modifier.weight(1f).fillMaxHeight())
+                // The sanctuary (mascot + health) column overhangs into the spare sky beside
+                // the fold by DeadZones.SanctuaryOverhang; the constellation keeps its width.
+                BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+                    val gap = 10.dp
+                    val constellationWidth = (maxWidth - gap) / 2
+                    Row(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .wrapContentWidth(Alignment.Start, unbounded = true)
+                            .requiredWidth(maxWidth + DeadZones.SanctuaryOverhang),
+                        horizontalArrangement = Arrangement.spacedBy(gap)
+                    ) {
+                        ConstellationColumn(state, Modifier.width(constellationWidth).fillMaxHeight())
+                        SanctuaryColumn(state, actions, Modifier.weight(1f).fillMaxHeight())
+                    }
                 }
             }
 
@@ -512,7 +557,24 @@ private fun ShieldStatusChip(isActive: Boolean, pause: TouchPause?, onClick: () 
 
 @Composable
 private fun ConstellationColumn(state: DashboardUiState, modifier: Modifier) {
-    Column(modifier = modifier.verticalScroll(rememberScrollState())) {
+    val scroll = rememberScrollState()
+    val pxPerSecond = with(LocalDensity.current) { CONSTELLATION_SCROLL_DP_PER_S.dp.toPx() }
+    // Slow ping-pong drift through the list: rest, glide to the bottom, rest, glide back.
+    // A finger drag cancels the glide; it simply resumes after the next rest.
+    LaunchedEffect(scroll, pxPerSecond) {
+        while (true) {
+            delay(CONSTELLATION_REST_MS)
+            if (scroll.maxValue == 0 || scroll.isScrollInProgress) continue
+            val target = if (scroll.value < scroll.maxValue) scroll.maxValue else 0
+            val millis = (abs(target - scroll.value) / pxPerSecond * 1000).toInt().coerceAtLeast(600)
+            try {
+                scroll.animateScrollTo(target, tween(durationMillis = millis, easing = LinearEasing))
+            } catch (e: CancellationException) {
+                if (!isActive) throw e // real cancellation; otherwise a user drag interrupted us
+            }
+        }
+    }
+    Column(modifier = modifier.verticalScroll(scroll)) {
         ServiceConstellation(services = state.services)
         Spacer(Modifier.height(8.dp))
     }
@@ -528,7 +590,16 @@ private fun SanctuaryColumn(state: DashboardUiState, actions: DashboardActions, 
         PillowCard(tint = Color(0x99E4F6FF), outline = OutlineSky, contentPadding = PaddingValues(12.dp)) {
             DreamySectionHeader(emoji = "🌙", title = "Celestial Health")
             Spacer(Modifier.height(6.dp))
-            CloudBatteryMeter(battery = state.battery, modifier = Modifier.fillMaxWidth())
+            // Battery cloud on the left, CPU/RAM bars beside it (uses the overhang width
+            // instead of making the card taller)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CloudBatteryMeter(battery = state.battery, modifier = Modifier.weight(1.3f))
+                SystemLoadBars(load = state.systemLoad, modifier = Modifier.weight(1f))
+            }
         }
         Spacer(Modifier.height(4.dp))
     }
@@ -661,7 +732,7 @@ private fun MascotCard(state: DashboardUiState, onClick: () -> Unit) {
     PillowCard(
         tint = Color(0x99FFE6F2),
         outline = OutlinePink,
-        modifier = Modifier.kawaiiBounceClick(pressedScale = 0.96f, onClick = onClick),
+        modifier = Modifier.fillMaxWidth().kawaiiBounceClick(pressedScale = 0.96f, onClick = onClick),
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
     ) {
         CloudMascot(
@@ -731,7 +802,8 @@ private fun DreamyDashboardPreview() {
                     AppInfo("Shizuku", "moe.shizuku.privileged.api"),
                     AppInfo("Settings", "com.android.settings"),
                     AppInfo("Jellyfin", "org.jellyfin.mobile"),
-                )
+                ),
+                systemLoad = SystemLoad(cpuPercent = 42, ramUsedMb = 5175, ramTotalMb = 7367),
             ),
             actions = DashboardActions()
         )

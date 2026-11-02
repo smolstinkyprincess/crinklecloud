@@ -30,6 +30,11 @@ object DeadZones {
     val TopStrip = 40.dp
     /** Roughly quarter-circle dead patch in the top-right corner. */
     val CornerRadius = 130.dp
+    /**
+     * How far the mascot/health column may reach past the left half into the fold strip.
+     * FoldWidth is generous; on the real panel ~3/4" (~120 dp) beside it is usable.
+     */
+    val SanctuaryOverhang = 100.dp
 }
 
 /** Dashed pink outlines over each dead zone. Draw-only, so touches pass straight through. */

@@ -47,3 +47,6 @@ termux/**/monitor.conf
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Phone-specific scripts/configs (own local git repo, never published)
+/private/

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -116,7 +117,10 @@ fun CloudBatteryMeter(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(2.4f),
+                // Keep the cloud its cosy size on wide cards: cap the height and let the
+                // width follow the aspect ratio (the column centres it)
+                .heightIn(max = 84.dp)
+                .aspectRatio(2.4f, matchHeightConstraintsFirst = true),
             contentAlignment = Alignment.Center
         ) {
             Canvas(Modifier.fillMaxSize()) {

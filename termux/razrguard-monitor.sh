@@ -117,7 +117,8 @@ check_http() {
     local entry name url code
     for entry in "${HTTP_CHECKS[@]}"; do
         read -r name url <<<"$entry"
-        code=$(curl -s -o /dev/null -m 10 -w '%{http_code}' "$url")
+        # -k: local services use self-signed certs (e.g. Caddy on :8443)
+        code=$(curl -sk -o /dev/null -m 10 -w '%{http_code}' "$url")
         if [ "$code" != "000" ] && ((code < 500)); then
             check "http:$name" 1 ""
         else
@@ -135,7 +136,7 @@ STATE_DIR="$HOME/.local/state/razrguard"
 ts_down_since=0 ts_step=0 wan_down_since=0 wan_step=0 ip_warned=0
 
 privileged() {
-    RISH_APPLICATION_ID=com.termux timeout 60 rish -c "$1" >/dev/null 2>&1
+    RISH_APPLICATION_ID=com.termux timeout 60 rish -c "$1" </dev/null >/dev/null 2>&1
 }
 
 recovery_action() { # what command
@@ -173,17 +174,29 @@ tailscale_step() { # step number, minutes down
     esac
 }
 
+# Prints "N: IFACE inet ADDR/..." lines like `ip -4 -o addr show`. Android 10+ blocks
+# netlink for apps, so `ip` usually fails in Termux; ifconfig (ioctl-based) still works
+# without privileges. rish (shell uid) is the last resort since it spawns a JVM.
+# rish output is read with 2>&1: this rish build splits lines across stdout and stderr.
+read_addrs() {
+    local out
+    out=$(ip -4 -o addr show 2>/dev/null)
+    grep -q ' inet ' <<<"$out" && { echo "$out"; return; }
+    out=$(ifconfig 2>/dev/null | awk '/^[^ \t]/ {sub(":", "", $1); i=$1} $1 == "inet" {n++; print n": "i"    inet "$2"/32"}')
+    grep -q ' inet ' <<<"$out" && { echo "$out"; return; }
+    RISH_APPLICATION_ID=com.termux timeout 30 rish -c "ip -4 -o addr show" </dev/null 2>&1
+}
+
 check_tailscale() {
     local addrs now=$EPOCHSECONDS mins
-    addrs=$(ip -4 -o addr show 2>/dev/null)
-    # Android may hide interfaces from apps; the shell uid can always see them
-    grep -q ' inet ' <<<"$addrs" ||
-        addrs=$(RISH_APPLICATION_ID=com.termux timeout 30 rish -c "ip -4 -o addr show" 2>/dev/null)
+    addrs=$(read_addrs)
     if ! grep -q ' inet ' <<<"$addrs"; then
-        # Can't read interfaces at all: never act on a blind guess
-        ((ip_warned)) || { log "cannot read network interfaces; Tailscale recovery disabled"; ip_warned=1; }
+        # Can't read interfaces at all: never act on a blind guess. Retried every tick
+        # (at boot Shizuku/rish may simply not be up yet).
+        ((ip_warned)) || { log "cannot read network interfaces; skipping Tailscale checks until readable"; ip_warned=1; }
         return
     fi
+    ((ip_warned)) && { log "network interfaces readable again; Tailscale checks resumed"; ip_warned=0; }
 
     if grep -Eq '^[0-9]+: tun[0-9]+ +inet 100\.' <<<"$addrs" &&
         { [ -z "$TS_PEER" ] || ping -c2 -W3 "$TS_PEER" >/dev/null 2>&1; }; then
@@ -224,9 +237,17 @@ heartbeat() {
     fi
 }
 
-read -r up _ </proc/uptime
-log "monitor started (phone uptime ${up%.*}s)"
-notify low robot "RazrGuard monitor started" "Phone uptime: $((${up%.*} / 60)) min"
+# Android 10+ hides /proc/uptime from apps; the shell uid (rish) can still read it
+up=$(cut -d' ' -f1 /proc/uptime 2>/dev/null) ||
+    up=$(RISH_APPLICATION_ID=com.termux timeout 30 rish -c "cut -d' ' -f1 /proc/uptime" </dev/null 2>&1)
+up=${up%.*}
+if [[ "$up" =~ ^[0-9]+$ ]]; then
+    log "monitor started (phone uptime ${up}s)"
+    notify low robot "RazrGuard monitor started" "Phone uptime: $((up / 60)) min"
+else
+    log "monitor started (phone uptime unknown)"
+    notify low robot "RazrGuard monitor started" "Phone uptime unknown"
+fi
 
 tick=0
 while :; do
