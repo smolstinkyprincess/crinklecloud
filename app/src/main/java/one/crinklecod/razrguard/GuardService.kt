@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.graphics.PixelFormat
+import android.graphics.drawable.GradientDrawable
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.Build
@@ -23,6 +24,8 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.widget.FrameLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ServiceCompat
 import kotlinx.coroutines.CoroutineScope
@@ -54,6 +57,12 @@ data class BatteryInfo(
 data class NetworkIps(
     val lanIp: String? = null,
     val tailscaleIp: String? = null
+)
+
+/** A temporary touch-blocker suspension; the overlay comes back at [endsAtElapsedMs] (elapsedRealtime). */
+data class TouchPause(
+    val endsAtElapsedMs: Long,
+    val durationMs: Long
 )
 
 class GuardService : Service() {
@@ -383,6 +392,15 @@ class GuardService : Service() {
         }
     }
 
+    /** Flushes filesystem write buffers; via Shizuku when available, otherwise through Termux. */
+    fun syncStorage() {
+        scope.launch {
+            if (ShizukuBridge.exec("sync") == null) {
+                runInTermux(TERMUX_BASH, arrayOf("-c", "sync"))
+            }
+        }
+    }
+
     private fun createNotification(): Notification {
         val channelId = "razr_guard_channel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -412,6 +430,10 @@ class GuardService : Service() {
     }
 
     fun enableTouchBlocker() {
+        // Any explicit (re)engage ends a pending pause
+        touchBlockerJob?.cancel()
+        touchBlockerJob = null
+        _touchPause.value = null
         if (!Settings.canDrawOverlays(this)) {
             Log.w(TAG, "Cannot enable touch blocker: Overlay permission not granted.")
             _isTouchBlockerActive.value = false
@@ -437,7 +459,8 @@ class GuardService : Service() {
         }
         touchBlockerParams = params
 
-        touchBlockerView = View(this).apply {
+        touchBlockerView = FrameLayout(this).apply {
+            addView(createUnlockHeart())
             setOnTouchListener { v, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
                     val now = SystemClock.elapsedRealtime()
@@ -479,6 +502,7 @@ class GuardService : Service() {
 
     fun disableTouchBlocker() {
         touchBlockerJob?.cancel()
+        _touchPause.value = null
         touchBlockerView?.let {
             try {
                 (getSystemService(WINDOW_SERVICE) as WindowManager).removeView(it)
@@ -516,13 +540,54 @@ class GuardService : Service() {
         applyDisplayAndBacklightOptimizations()
     }
 
-    private fun pauseTouchBlockerTemporarily(durationMs: Long) {
+    /**
+     * Floating pastel heart inside the overlay. The overlay swallows every touch, so an unlock
+     * control has to live on the overlay itself; long-press (not tap) so stray touches can't trip it.
+     */
+    private fun createUnlockHeart(): View {
+        val density = resources.displayMetrics.density
+        val sizePx = (56 * density).toInt()
+        val marginPx = (24 * density).toInt()
+        return TextView(this).apply {
+            text = "♡"
+            textSize = 26f
+            gravity = Gravity.CENTER
+            setTextColor(0xFFE5628A.toInt())
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(0xE6FFE1EF.toInt())
+                setStroke((2 * density).toInt(), 0xFFFFB5D8.toInt())
+            }
+            alpha = 0.9f
+            contentDescription = "Hold to unlock touch for ${QUICK_UNLOCK_MS / 1000} seconds"
+            setOnClickListener {
+                Toast.makeText(
+                    applicationContext,
+                    "Hold the heart to unlock for ${QUICK_UNLOCK_MS / 1000}s ♡",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            setOnLongClickListener {
+                // Post so the overlay isn't removed from inside its own event dispatch
+                scope.launch(Dispatchers.Main) { pauseTouchBlockerTemporarily(QUICK_UNLOCK_MS) }
+                true
+            }
+            // Bottom-left: clear of the cracked top-right corner and the fold on this Razr
+            layoutParams = FrameLayout.LayoutParams(sizePx, sizePx, Gravity.BOTTOM or Gravity.START).apply {
+                setMargins(marginPx * 2, marginPx, marginPx, marginPx)
+            }
+        }
+    }
+
+    fun pauseTouchBlockerTemporarily(durationMs: Long) {
         disableTouchBlocker()
+        _touchPause.value = TouchPause(SystemClock.elapsedRealtime() + durationMs, durationMs)
+        val pretty = if (durationMs < 60_000L) "${durationMs / 1000}s" else "${durationMs / 60_000L} min"
         scope.launch(Dispatchers.Main) {
             Toast.makeText(
                 applicationContext,
-                "🔓 RazrGuard: Touch shield paused for 2 mins (tap 5x top-right to unlock)",
-                Toast.LENGTH_LONG
+                "🔓 RazrGuard: Touch shield paused for $pretty",
+                Toast.LENGTH_SHORT
             ).show()
         }
         touchBlockerJob = scope.launch {
@@ -568,6 +633,7 @@ class GuardService : Service() {
         const val PREFS_NAME = "razrguard_prefs"
         const val KEY_KEEP_SCREEN_ON = "keep_screen_on"
         const val DEFAULT_SCREEN_TIMEOUT_MS = 300_000 // 5 minutes
+        const val QUICK_UNLOCK_MS = 15_000L
 
         private const val HEALTH_URL = "http://127.0.0.1:8000/"
 
@@ -596,6 +662,9 @@ class GuardService : Service() {
 
         private val _isTouchBlockerActive = MutableStateFlow(false)
         val isTouchBlockerActive: StateFlow<Boolean> = _isTouchBlockerActive.asStateFlow()
+
+        private val _touchPause = MutableStateFlow<TouchPause?>(null)
+        val touchPause: StateFlow<TouchPause?> = _touchPause.asStateFlow()
 
         private val _keepScreenOn = MutableStateFlow(false)
         val keepScreenOn: StateFlow<Boolean> = _keepScreenOn.asStateFlow()
@@ -633,6 +702,10 @@ class GuardService : Service() {
             }
         }
 
+        fun requestPauseTouchBlocker(durationMs: Long = 120_000L) {
+            instance?.pauseTouchBlockerTemporarily(durationMs)
+        }
+
         fun requestToggleKeepScreenOn(keepOn: Boolean) {
             instance?.setKeepScreenOn(keepOn) ?: run {
                 _keepScreenOn.value = keepOn
@@ -662,6 +735,10 @@ class GuardService : Service() {
                 }
             }
         }
+
+        /** False if the service isn't running (nothing to run the command through). */
+        fun requestSyncStorage(): Boolean =
+            instance?.let { it.syncStorage(); true } ?: false
 
         fun requestCheckAdbTcp() {
             instance?.scope?.launch {

@@ -2,52 +2,58 @@ package one.crinklecod.razrguard.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// OLED-safe Dark Base
-val PlumOledCanvas = Color(0xFF130E1C)
-val PastelPlumCard = Color(0xFF281F38)
-val PastelPlumElevated = Color(0xFF35294A)
-val PastelPlumLight = Color(0xFF443460)
+// ☁️ Cotton-candy sky (backdrop gradient, top → bottom)
+val SkyBabyBlue = Color(0xFFCFE8FF)
+val SkyPeriwinkle = Color(0xFFDCD6FF)
+val SkyLavender = Color(0xFFEBDDFF)
+val SkyBlush = Color(0xFFFFE1EF)
+val SkyCream = Color(0xFFFFF6EC)
 
-// Vibrant Pastel Accents & Text
-val CottonCandyPink = Color(0xFFFFC6FF)
-val StrawberryMilk = Color(0xFFFFB7B2)
-val WhippedCream = Color(0xFFFFF9F5)
-val FairyLilac = Color(0xFFE8D5FF)
-val PastelPeach = Color(0xFFFFDAC1)
-val PastelButtercup = Color(0xFFFFF1BA)
-val SoftMatchaMint = Color(0xFFB5EAD7)
-val BabySkyBlue = Color(0xFFC7CEEA)
+// 🍦 Whipped cream whites
+val CloudWhite = Color(0xFFFFFDFE)
+val WhippedCream = Color(0xFFFFF8F1)
+val MarshmallowMist = Color(0xFFFCF5FF)
 
-// Status Fills & Borders (Visible pastel tints with high contrast)
-val MintChipFill = Color(0x35B5EAD7)
-val MintChipBorder = Color(0x80B5EAD7)
+// 🌸 Pastel accents
+val DreamLavender = Color(0xFFE4D6FF)
+val LavenderHaze = Color(0xFFCDB8F7)
+val BabySkyBlue = Color(0xFFC9E4FF)
+val PowderBlue = Color(0xFFA9D2FF)
+val BubblegumPink = Color(0xFFFFD3E8)
+val CottonCandyPink = Color(0xFFFFB5D8)
+val PeachSorbet = Color(0xFFFFDCC7)
+val ShimmerButter = Color(0xFFFFF2B3)
+val StarlightYellow = Color(0xFFFFE57F)
+val MintMilk = Color(0xFFCDF3E3)
+val MintSparkle = Color(0xFFA6E9CF)
 
-val PeachChipFill = Color(0x35FFB7B2)
-val PeachChipBorder = Color(0x80FFB7B2)
+// ✏️ Ink — soft plum instead of black so text stays dreamy but readable on pastels
+val PlumInk = Color(0xFF55427A)
+val PlumInkSoft = Color(0xFF85739F)
+val PlumInkFaint = Color(0xFFB3A6C9)
 
-val LilacChipFill = Color(0x35E8D5FF)
-val LilacChipBorder = Color(0x70E8D5FF)
+// 💗 Status tones (deeper than the fills so they read on light backgrounds)
+val HappyMint = Color(0xFF38A97F)
+val SleepyRose = Color(0xFFE5628A)
+val PendingLilac = Color(0xFF9B88CC)
+val ToastyPeach = Color(0xFFF09A55)
 
-val PinkChipFill = Color(0x35FFC6FF)
-val PinkChipBorder = Color(0x80FFC6FF)
+// 🫧 Pillow surfaces: translucent fills + soft outlines
+val PillowFill = Color(0xB8FFFFFF)
+val PillowFillStrong = Color(0xE6FFFFFF)
+val PillowFillPink = Color(0x99FFD3E8)
+val PillowFillLilac = Color(0x99E4D6FF)
+val PillowFillSky = Color(0x99C9E4FF)
+val PillowFillMint = Color(0x99CDF3E3)
+val PillowFillButter = Color(0x99FFF2B3)
+val PillowFillPeach = Color(0x99FFDCC7)
 
-val SkyBlueChipFill = Color(0x35C7CEEA)
-val SkyBlueChipBorder = Color(0x80C7CEEA)
+val OutlinePink = Color(0xCCFFB5D8)
+val OutlineLilac = Color(0xCCCDB8F7)
+val OutlineSky = Color(0xCCA9D2FF)
+val OutlineMint = Color(0xCCA6E9CF)
+val OutlineButter = Color(0xCCFFE57F)
+val OutlinePeach = Color(0xCCFFC4A3)
 
-val BorderPinkGlow = Color(0x66FFC6FF)
-val BorderLilacGlow = Color(0x55E8D5FF)
-
-// Backwards-compatible aliases
-val WarmBlushPink = CottonCandyPink
-val SoftMilkCream = WhippedCream
-val PaleLilac = FairyLilac
-val LavenderFogSurface = PastelPlumCard
-val LavenderFogElevated = PastelPlumElevated
-val SoftMintSage = SoftMatchaMint
-val SoftMintContainer = MintChipFill
-val SoftMintBorder = MintChipBorder
-val MutedPeachCoral = StrawberryMilk
-val MutedPeachContainer = PeachChipFill
-val MutedPeachBorder = PeachChipBorder
-val SoftMauveViolet = PastelPlumLight
-val CardBorderBlush = BorderPinkGlow
+// Soft drop shadow tint for pillows (lavender instead of grey)
+val PillowShadow = Color(0x40B79CEB)
