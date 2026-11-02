@@ -44,13 +44,13 @@ am start -n com.tailscale.ipn/.MainActivity >/dev/null 2>&1
 
 # --- 4. Screen & Digitizer Tucking ---
 log_step "✨ [4/6]" "Calming screen digitizer & tucking display into sleep..."
-rish -c "wm size 1x1" 2>/dev/null
-rish -c "input keyevent 223" 2>/dev/null
+# Disabled: CrinkleCloud uses the display now
+#rish -c "wm size 1x1" 2>/dev/null
+#rish -c "input keyevent 223" 2>/dev/null
 
-# --- 5. Storage Directories & SQLite WAL Tuning ---
-log_step "📂 [5/6]" "Checking storage & tuning SQLite WAL mode..."
+# --- 5. Storage Directories ---
+log_step "📂 [5/6]" "Checking anime storage folder..."
 mkdir -p "$HOME/storage/shared/Download/Anime"
-bash "$HOME/.termux/tune-storage.sh" 2>/dev/null || true
 
 # --- 6. runit Supervisor ---
 # No 15s route-settle wait needed anymore: a service that fails because the network
@@ -58,7 +58,7 @@ bash "$HOME/.termux/tune-storage.sh" 2>/dev/null || true
 log_step "🧸 [6/6]" "Waking the runit supervisor (it starts & babysits every service)..."
 export SVDIR="$PREFIX/var/service"
 export LOGDIR="$PREFIX/var/log"
-if ! pgrep -x runsvdir > /dev/null; then
+if ! pgrep -f '^[^ ]*/runsvdir '  > /dev/null; then
     service-daemon start
 fi
 

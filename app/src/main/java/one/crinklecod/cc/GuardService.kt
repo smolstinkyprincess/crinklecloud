@@ -289,7 +289,21 @@ class GuardService : Service() {
         _networkIps.value = NetworkIps(lanIp = lan, tailscaleIp = tailscale)
     }
 
+    /**
+     * Prefers the shared status feed (stats.json from update-stats.sh: runit state + HTTP
+     * checks), so the app, web dashboard and alerts agree. Falls back to probing ports
+     * itself when the feed is missing or stale (e.g. darkhttpd or update-stats is down).
+     */
     private fun checkMultiServices() {
+        val feed = SystemStats.fetchSnapshot()?.takeIf { it.isFresh }?.services
+        if (feed != null) {
+            _jellyfinStatus.value = feed["jellyfin"]
+            _suwayomiStatus.value = feed["suwayomi"]
+            _transmissionStatus.value = feed["transmission"]
+            _vaultwardenStatus.value = feed["vaultwarden"]?.let { it && feed["caddy"] == true }
+            _filebrowserStatus.value = feed["filebrowser"]
+            return
+        }
         _jellyfinStatus.value = isEndpointHealthy("http://127.0.0.1:8096/health", 2000) || isPortListening(8096, 1000)
         _suwayomiStatus.value = isEndpointHealthy("http://127.0.0.1:4567/", 2000) || isPortListening(4567, 1000)
         _transmissionStatus.value = isPortListening(9091, 1000)

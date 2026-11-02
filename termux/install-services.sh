@@ -111,7 +111,7 @@ backup "$BOOT" "$HOME/.termux/start-services.sh.pre-runit"
 write "$BOOT" 755 <"$HERE/start-services.sh"
 backup "$HOME/.termux/start-shizuku.sh" "$HOME/.termux/start-shizuku.sh.pre-runit"
 write "$HOME/.termux/start-shizuku.sh" 755 <"$HERE/start-shizuku.sh"
-write "$HOME/.termux/tune-storage.sh" 755 <"$HERE/tune-storage.sh"
+rm -f "$HOME/.termux/tune-storage.sh"   # retired
 write "$HOME/.termux/razrguard-monitor.sh" 755 <"$HERE/razrguard-monitor.sh"
 mkdir -p "$HOME/.config/razrguard"
 [[ -f "$HOME/.config/razrguard/monitor.conf" ]] || \
@@ -119,7 +119,7 @@ mkdir -p "$HOME/.config/razrguard"
 backup "$HOME/restart-services.sh" "$HOME/restart-services.sh.pre-runit"
 write "$HOME/restart-services.sh" 755 <"$HERE/restart-services.sh"
 
-pgrep -x runsvdir >/dev/null || SVDIR="$SVDIR" LOGDIR="$PREFIX/var/log" service-daemon start
+pgrep -f '^[^ ]*/runsvdir '  >/dev/null || SVDIR="$SVDIR" LOGDIR="$PREFIX/var/log" service-daemon start
 
 echo "[+] Services installed in $SVDIR (supervisor running)"
 if ((${#new[@]})); then
@@ -130,3 +130,4 @@ if [[ "${SVDIR_FROM_ENV:-}" != "$SVDIR" ]]; then
     echo "[!] sv/sv-enable need SVDIR in your shell. Open a new Termux session, or run:"
     echo "      export SVDIR=$SVDIR"
 fi
+exit 0
