@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CrinkleCloud ✨ ☁️ Dreamy Android Server Launcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient-top: #150d24;
+      --bg-gradient-mid: #201338;
+      --bg-gradient-bottom: #10081d;
+      --card-bg: rgba(43, 27, 73, 0.65);
+      --card-border: rgba(255, 190, 239, 0.35);
+      --card-border-glow: rgba(229, 208, 255, 0.45);
+      --pink-accent: #ffbeef;
+      --lilac-accent: #e5d0ff;
+      --mint-accent: #b5f2d6;
+      --sky-accent: #b8e3ff;
+      --yellow-star: #fff3a3;
+      --peach-accent: #ffd6cc;
+      --text-main: #fff9fd;
+      --text-sub: #c7bed9;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 20%, var(--bg-gradient-mid), var(--bg-gradient-top) 60%, var(--bg-gradient-bottom));
+      min-height: 100vh;
+      font-family: 'Quicksand', sans-serif;
+      color: var(--text-main);
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient drifting cloud puffs */
+    .sky-cloud {
+      position: absolute;
+      background: radial-gradient(circle, rgba(229, 208, 255, 0.08) 0%, rgba(255, 190, 239, 0.03) 60%, transparent 80%);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: floatPuff 20s ease-in-out infinite alternate;
+    }
+
+    .cloud-1 { width: 450px; height: 450px; top: -50px; left: -100px; animation-duration: 22s; }
+    .cloud-2 { width: 550px; height: 550px; bottom: 50px; right: -150px; animation-duration: 28s; }
+    .cloud-3 { width: 350px; height: 350px; top: 35%; left: 60%; animation-duration: 18s; }
+
+    @keyframes floatPuff {
+      0% { transform: translateY(0) scale(1); }
+      100% { transform: translateY(-40px) scale(1.08); }
+    }
+
+    header {
+      text-align: center;
+      padding: 60px 20px 25px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 18px;
+      background: rgba(255, 190, 239, 0.12);
+      border: 1.5px solid var(--card-border);
+      border-radius: 999px;
+      font-size: 0.9rem;
+      color: var(--pink-accent);
+      font-weight: 700;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(255, 190, 239, 0.15);
+    }
+
+    h1 {
+      font-family: 'Comfortaa', cursive;
+      font-size: 3.2rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fff9fd 20%, var(--pink-accent) 60%, var(--lilac-accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 14px;
+    }
+
+    .tagline {
+      font-size: 1.25rem;
+      color: var(--text-sub);
+      max-width: 650px;
+      margin: 0 auto 30px;
+      line-height: 1.6;
+    }
+
+    .hero-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 45px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 28px;
+      border-radius: 24px;
+      font-size: 1rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--pink-accent), var(--lilac-accent));
+      color: #1e1136;
+      box-shadow: 0 8px 25px rgba(255, 190, 239, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 12px 30px rgba(255, 190, 239, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border: 1.5px solid var(--card-border-glow);
+      backdrop-filter: blur(8px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-3px);
+    }
+
+    /* Screenshot container */
+    .screenshot-wrap {
+      max-width: 960px;
+      margin: 0 auto 70px;
+      padding: 0 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .screenshot-card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border-glow);
+      border-radius: 36px;
+      padding: 16px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 25px 60px rgba(10, 5, 22, 0.8), 0 0 40px rgba(229, 208, 255, 0.2);
+      transition: transform 0.4s ease;
+    }
+
+    .screenshot-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .screenshot-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 24px;
+    }
+
+    /* Features Grid */
+    .features-section {
+      max-width: 1050px;
+      margin: 0 auto 80px;
+      padding: 0 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .section-title {
+      font-family: 'Comfortaa', cursive;
+      text-align: center;
+      font-size: 2.1rem;
+      margin-bottom: 40px;
+      color: var(--lilac-accent);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 22px;
+    }
+
+    .feature-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: 28px;
+      padding: 26px 22px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--pink-accent);
+      box-shadow: 0 14px 40px rgba(255, 190, 239, 0.2);
+    }
+
+    .feature-icon {
+      font-size: 2.2rem;
+      margin-bottom: 12px;
+      display: inline-block;
+    }
+
+    .feature-card h3 {
+      font-family: 'Comfortaa', cursive;
+      font-size: 1.25rem;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .feature-card p {
+      color: var(--text-sub);
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px 20px 60px;
+      color: var(--text-sub);
+      font-size: 0.95rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+      z-index: 2;
+    }
+
+    footer a {
+      color: var(--pink-accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="sky-cloud cloud-1"></div>
+  <div class="sky-cloud cloud-2"></div>
+  <div class="sky-cloud cloud-3"></div>
+
+  <header>
+    <div class="badge-pill">
+      <span>☁️</span> package: one.crinklecod.cc ✨
+    </div>
+    <h1>CrinkleCloud</h1>
+    <p class="tagline">
+      A dreamy, locked-landscape Android launcher &amp; 24/7 background watchdog for dedicated server nodes, desk docks, and home lab setups.
+    </p>
+    <div class="hero-buttons">
+      <a href="https://github.com/smolstinkyprincess/crinklecloud" class="btn btn-primary" target="_blank" rel="noopener">
+        <span>⭐</span> View on GitHub
+      </a>
+      <a href="https://github.com/smolstinkyprincess/crinklecloud/blob/main/setup-razrguard.sh" class="btn btn-secondary" target="_blank" rel="noopener">
+        <span>📜</span> Setup Script
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <div class="screenshot-wrap">
+      <div class="screenshot-card">
+        <img src="https://raw.githubusercontent.com/smolstinkyprincess/crinklecloud/main/screenshots/crinklecloud.png" alt="CrinkleCloud Dreamy Dashboard Screenshot">
+      </div>
+    </div>
+
+    <section class="features-section">
+      <h2 class="section-title">✨ Crafted with Comfort &amp; Care ✨</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">☁️</div>
+          <h3>Pillowy Dreamscape UI</h3>
+          <p>Locked landscape orientation with 28dp+ organic pillowy curves, starry twilight backdrops, and soft floating animations designed for 24/7 desk displays.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔋</div>
+          <h3>Fluffy Cloud Battery Meter</h3>
+          <p>Real-time visual battery fill and thermal watchdog that alerts with pastel color cues before devices heat up on continuous charge.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">✨</div>
+          <h3>Celestial Health Constellation</h3>
+          <p>Live health and port badges for darkhttpd, sshd, jellyfin, suwayomi, transmission, ADB TCP, and Shizuku binder connectivity.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🛡️</div>
+          <h3>Touch Shield &amp; Quick Unlock</h3>
+          <p>Over-the-screen touch blocker prevents accidental screen taps on display docks, paired with a quick temporary pause toggle.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🧸</div>
+          <h3>Floating Action Dock</h3>
+          <p>Single-tap triggers to restart the Termux stack, cycle network ADB port 5555, re-bind Doze immunity, and toggle display sleep.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🎀</div>
+          <h3>Favorite Apps Launcher</h3>
+          <p>Bouncy launcher deck tailored for server and management tools, plus an intuitive cloud-shaped dialog to pin your favorite APKs.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Crafted with ♡ by <a href="https://github.com/smolstinkyprincess" target="_blank" rel="noopener">crinklecod</a> • Licensed under MIT</p>
+  </footer>
+</body>
+</html>
