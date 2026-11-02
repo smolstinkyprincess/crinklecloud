@@ -1,0 +1,25 @@
+# RazrGuard monitor settings. Installed to ~/.config/razrguard/monitor.conf (only if it
+# doesn't exist yet). Apply edits with: sv restart razrguard-monitor
+
+# ntfy: anyone who knows the topic name can read these alerts, so keep it private
+NTFY_SERVER="https://ntfy.sh"
+NTFY_TOPIC="razrguard6416842"
+
+# healthchecks.io ping URL (Check > Details), e.g. https://hc-ping.com/xxxxxxxx-xxxx-...
+# Set the check's Period to 5 minutes and Grace Time to 10 minutes.
+HC_URL=""
+
+# Endpoints to probe, "name url". Any HTTP response below 500 counts as up.
+HTTP_CHECKS=(
+    "dashboard http://127.0.0.1:8000/"
+    "jellyfin http://127.0.0.1:8096/health"
+    "suwayomi http://127.0.0.1:4567/"
+)
+
+# Tailscale recovery. Starts as a dry run: you get "Would: ..." alerts but nothing is
+# touched. Once those look right, set TS_ACTIONS=1. Steps after Tailscale has been down
+# (while the internet works): 2 min reconnect, 5 min restart app, 10 min toggle Wi-Fi,
+# 30 min reboot (max once per 6 h).
+TS_ACTIONS=0
+# Optional: tailnet IP of an always-on machine; Tailscale only counts as up if it answers
+TS_PEER=""

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Network (localhost health checks) & Wakelock -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <!-- Auto-start on boot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Foreground Service Permissions (Required for Android 14+) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Lets us fire Termux's RunCommandService (grant via adb: see README notes) -->
+    <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
+
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <!-- Android 11+ package visibility so we can resolve Termux and all launcher apps -->
+    <queries>
+        <package android:name="com.termux" />
+        <package android:name="com.tailscale.ipn" />
+        <package android:name="moe.shizuku.privileged.api" />
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="true"
+        android:icon="@android:drawable/ic_dialog_info"
+        android:label="RazrGuard"
+        android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
+        android:theme="@style/Theme.RazrGuard">
+
+        <!-- Launcher & Server Dashboard Activity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.RazrGuard">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- 24/7 Watchdog Service -->
+        <service
+            android:name=".GuardService"
+            android:enabled="true"
+            android:exported="true"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Headless server wake lock and process watchdog" />
+        </service>
+
+        <!-- Zero-touch Reboot Receiver -->
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Shizuku binder handoff (optional privileged recovery) -->
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.shizuku"
+            android:enabled="true"
+            android:exported="true"
+            android:multiprocess="false"
+            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+
+    </application>
+</manifest>

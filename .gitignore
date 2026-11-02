@@ -1,0 +1,49 @@
+# Built application & Gradle caches
+*.iml
+.gradle/
+build/
+app/build/
+/build
+/captures
+.externalNativeBuild
+.cxx
+
+# Local SDK & Machine Config
+local.properties
+.kotlin/
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iws
+
+# Keystores, Signing Keys & Certificates (CRITICAL)
+*.jks
+*.keystore
+*.p12
+*.bks
+signing.properties
+keystore.properties
+
+# Secrets, API Keys & Environment Variables
+*.env
+.env.*
+*.key
+*.pem
+*.crt
+*.pfx
+id_rsa
+id_ed25519
+id_ecdsa
+google-services.json
+
+# Termux, Server & Webhook Configurations
+termux/**/monitor.conf
+!termux/**/monitor.conf.example
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
